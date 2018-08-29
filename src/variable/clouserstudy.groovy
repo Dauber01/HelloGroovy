@@ -52,13 +52,68 @@ println str.each {
         //print s.multiply(2)
 }
 //通过find方法查找字符串中的第一个数字
-println str.find {s -> s.isNumber()}
+//println str.find {s -> s.isNumber()}
 //通过findall方法查找字符串中的所有数字
-println str.findAll {s -> s.isNumber()}
+//println str.findAll {s -> s.isNumber()}
 //通过any方法验证str中是否存在数字
-println str.any {s -> s.isNumber()}
+//println str.any {s -> s.isNumber()}
 //通过every方法验证str中是否全是数字
-println str.every {s -> s.isNumber()}
+//println str.every {s -> s.isNumber()}
 //通过collect方法收集符合要求的成员
 def list = str.collect {s -> s.toUpperCase()}
-println list.asList().toListString()
+//println list.asList().toListString()
+
+//试验闭包中的默认变量 this, owner, delegate的默认值和类.闭包之间的委托策略
+def defaultclouser = {
+    println "this :" + this
+    println "owner :" + owner
+    println "delegate" + delegate
+}
+//defaultclouser.call()
+
+class Person{
+    def/* static*/ classclouser = {
+        println "classthis :" + this
+        println "classowner :" + owner
+        println "classdelegate" + delegate
+    }
+    def/* static*/ method(){
+        def methodclouser = {
+            println "methodthis :" + this
+            println "methodowner :" + owner
+            println "methoddelegate" + delegate
+        }
+        methodclouser.call()
+    }
+}
+//Person.classclouser.call()
+//Person.method()
+Person person = new Person()
+//person.classclouser.call()
+//person.method()
+
+def outclouser = {
+    def innerclouser = {
+        println "innerthis :" + this    //this指定该闭包所在的外部类的class文件或对象
+        println "innerowner :" + owner  //owner指定该闭包所在的外部类或者闭包的class文件或对象
+        println "innerdelegate" + delegate  //默认是owner
+    }
+    innerclouser.delegate = person  //其中delegate值是可以指定的,其它两个值是不可变的
+    innerclouser.call()
+}
+//outclouser.call()
+
+class Student{
+    String name
+    def clouser = {
+        "my name is ${name}"
+    }
+}
+class Teacher{
+    String name
+}
+Student stu = new Student(name: 'lilei')
+Teacher tea = new Teacher(name: 'hanmeimei')
+stu.clouser.delegate = tea
+stu.clouser.resolveStrategy = Closure.DELEGATE_ONLY  //默认为OWNER_FIRST,当为DELEGATE_ONLY注入找不到对应的变量时,会报错
+println stu.clouser.call()
